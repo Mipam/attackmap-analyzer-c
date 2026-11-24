@@ -644,3 +644,21 @@ def test_pure_c_project_headers_still_analyzed(tmp_path: Path) -> None:
     result = CAnalyzer().analyze(tmp_path)
     assert [(r.path, r.file) for r in result.routes] == [("/api/items", "routes.h")]
     assert result.files_scanned == 2
+
+
+# ---------- extraction protocol declaration (SDK v2) ----------
+
+def test_declares_extraction_protocol_2() -> None:
+    """AC-403: the analyzer explicitly declares extraction protocol 2.0.
+
+    Core's declared_extraction_protocol picks the class attribute up so
+    version gating reports the pinned version rather than the SDK default.
+    Compat note: plugins pinned to protocol 1.0 still load — core lifts v1
+    payloads through attackmap.extraction.adapters (v1 -> v2 -> v1 is
+    lossless), so this declaration must never remove v1 compatibility.
+    """
+    from attackmap.sdk.analyzer_contracts import declared_extraction_protocol
+
+    assert CAnalyzer.EXTRACTION_PROTOCOL_VERSION == "2.0"
+    assert declared_extraction_protocol(CAnalyzer()) == "2.0"
+    assert declared_extraction_protocol(CAnalyzer) == "2.0"
